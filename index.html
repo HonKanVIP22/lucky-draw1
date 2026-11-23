@@ -517,16 +517,17 @@ async function draw(){
   try{
     round=currentRound+1;
     localStorage.setItem("ROUND",String(round));
+    const winners=[];
     for(let k=0;k<count;k++){
       const index=Math.floor(Math.random()*items.length);
       const item=items.splice(index,1)[0];
+      winners.push(item);
       results.push({prize:prizeValue,round:currentRound,...item});
-      saveState();
-      await spinDigits(item);
-      await showWinner(item);
-      renderTable();
-      updateParticipantCount();
     }
+    saveState();
+    await spinDigits(winners[winners.length-1]);
+    renderTable();
+    updateParticipantCount();
   }finally{
     isDrawing=false;
     setDrawControlsLocked(false);
@@ -558,8 +559,12 @@ function renderTable(){
     grouped[key].push(r);
   });
 
+  const latestResult=results[results.length-1];
+  const latestGroupKey=latestResult?`${latestResult.prize} - Đợt ${latestResult.round}`:null;
+
   Object.keys(grouped).forEach(key=>{
     let cls="r"+Math.random().toString(36).substr(2,6);
+    const isLatest=key===latestGroupKey;
 
     resultTable.innerHTML+=`
       <tr class="round-header" onclick="toggle('${cls}')">
@@ -569,7 +574,7 @@ function renderTable(){
 
     grouped[key].forEach(r=>{
       resultTable.innerHTML+=`
-        <tr class="round-detail ${cls}">
+        <tr class="round-detail ${cls}" style="display:${isLatest?"table-row":"none"}">
           <td>${escapeHtml(r.prize)}</td>
           <td class="code">${escapeHtml(r.code)}</td>
           <td>${escapeHtml(r.name)}</td>
