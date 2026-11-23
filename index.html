@@ -186,38 +186,97 @@ h1{
   .digit{width:44px;height:64px;font-size:36px}
 }
 
-/* ===== WINNER CENTER ===== */
+/* ===== BATCH WINNER CELEBRATION ===== */
 #winnerBox{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.75);
   z-index:9999;
   align-items:center;
   justify-content:center;
+  box-sizing:border-box;
+  padding:16px;
+  background:rgba(3,10,28,.7);
 }
+#fireworksArea{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #winnerContent{
-  background:rgba(0,0,0,.85);
-  padding:40px 60px;
-  border-radius:30px;
-  box-shadow:0 0 50px rgba(255,215,0,.9);
   position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:min(740px,94vw);
+  max-height:88vh;
+  box-sizing:border-box;
+  padding:28px;
+  overflow:hidden;
+  border:1px solid rgba(255,220,105,.72);
+  border-radius:26px;
+  background:linear-gradient(155deg,rgba(10,29,61,.97),rgba(24,24,42,.95));
+  box-shadow:0 0 48px rgba(255,199,42,.42),0 20px 60px rgba(0,0,0,.45);
 }
 #winnerContent h2{
-  font-size:36px;
-  color:#ffeb3b;
-  margin-bottom:16px;
+  margin:0 0 8px;
+  color:#ffe16b;
+  font-size:clamp(25px,4vw,36px);
+  text-shadow:0 2px 10px rgba(255,191,0,.24);
 }
-#winnerName{
-  font-size:56px;
-  font-weight:900;
+#winnerIntro{font-size:16px;font-weight:700;color:#fff;text-align:center}
+#winnerBatchList{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:8px;
+  width:100%;
+  max-height:54vh;
+  margin:14px 0;
+  padding:2px 5px 2px 2px;
+  overflow-y:auto;
+  box-sizing:border-box;
+  text-align:left;
 }
-#winnerCode{
-  margin-top:12px;
-  font-size:22px;
-  opacity:.9;
+.winner-row{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding:9px 11px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
 }
-#winnerDepartment{margin-top:8px;font-size:20px;color:#ffe082}
+.winner-row strong{color:#fff;font-size:15px}
+.winner-row span{color:#ffe082;font-size:13px}
+#closeWinnerBtn{
+  min-width:130px;
+  padding:10px 22px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#ffe66d,#ffbd26);
+  color:#4b3510;
+  font:800 15px 'Segoe UI',Arial,sans-serif;
+  cursor:pointer;
+}
+#closeWinnerBtn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.firework-burst{position:absolute;width:1px;height:1px}
+.firework-particle{
+  position:absolute;
+  top:0;
+  left:0;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--color);
+  box-shadow:0 0 9px var(--color),0 0 18px var(--color);
+  animation:firework-explode 1.45s ease-out forwards;
+}
+@keyframes firework-explode{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(.08);opacity:0}
+}
+@media(max-width:700px){
+  #winnerContent{padding:22px 14px;border-radius:20px}
+  #winnerBatchList{grid-template-columns:1fr;max-height:58vh}
+  #winnerIntro{font-size:14px}
+}
 
 /* ===== SPARKLE ===== */
 .sparkle{
@@ -412,14 +471,14 @@ th,td{padding:14px}
 </div>
 
 <div id="winnerBox">
+  <div id="fireworksArea" aria-hidden="true"></div>
   <div id="winnerContent">
-    <h2>🎉 CHÚC MỪNG 🎉</h2>
-    <div class="sparkle" style="top:-10px;left:-20px;">✨</div>
-    <div class="sparkle" style="top:-10px;right:-20px;animation-delay:.5s">✨</div>
-    <div class="sparkle" style="bottom:-10px;left:45%;animation-delay:1s">⭐</div>
-    <div id="winnerName"></div>
-    <div id="winnerCode"></div>
-    <div id="winnerDepartment" style="display:none"></div>
+    <div class="sparkle" style="top:10px;left:14px;">✨</div>
+    <div class="sparkle" style="top:10px;right:14px;animation-delay:.5s">✨</div>
+    <h2>🎉 CHÚC MỪNG! 🎉</h2>
+    <div id="winnerIntro"></div>
+    <div id="winnerBatchList"></div>
+    <button id="closeWinnerBtn" type="button">Đóng</button>
   </div>
 </div>
 
@@ -528,6 +587,7 @@ async function draw(){
     await spinDigits(winners[winners.length-1]);
     renderTable();
     updateParticipantCount();
+    await showWinnerBatch(winners,prizeValue,currentRound);
   }finally{
     isDrawing=false;
     setDrawControlsLocked(false);
@@ -536,17 +596,77 @@ async function draw(){
   }
 }
 
-function showWinner(item){
-  winnerName.textContent=item.name;
-  winnerCode.textContent="Mã số: "+item.code;
-  winnerDepartment.textContent=item.department?"Bộ phận: "+item.department:"";
-  winnerDepartment.style.display=item.department?"block":"none";
-  winnerBox.style.display="flex";
-  return new Promise(resolve=>setTimeout(()=>{
-    winnerBox.style.display="none";
-    resolve();
-  },4000));
+let finishWinnerModal=null;
+let fireworksInterval=null;
+let fireworkTimeout=null;
+
+function showWinnerBatch(winners,prizeValue,roundNo){
+  const list=document.getElementById("winnerBatchList");
+  list.replaceChildren();
+  winners.forEach((item,index)=>{
+    const row=document.createElement("div");
+    row.className="winner-row";
+    const name=document.createElement("strong");
+    name.textContent=`${index+1}. ${item.name}`;
+    const detail=document.createElement("span");
+    detail.textContent=`Mã số: ${item.code}${item.department?" · "+item.department:""}`;
+    row.append(name,detail);
+    list.appendChild(row);
+  });
+  document.getElementById("winnerIntro").textContent=`Chúc mừng những anh chị có tên sau (${winners.length} người) · ${prizeValue} · Đợt ${roundNo}`;
+  document.getElementById("winnerBox").style.display="flex";
+  startFireworks();
+  return new Promise(resolve=>{finishWinnerModal=resolve;});
 }
+
+function launchFirework(){
+  const area=document.getElementById("fireworksArea");
+  const burst=document.createElement("div");
+  burst.className="firework-burst";
+  burst.style.left=`${8+Math.random()*84}%`;
+  burst.style.top=`${12+Math.random()*62}%`;
+  const colors=["#ffe66d","#ff5a7a","#70e1ff","#b78aff","#8dffb0"];
+  const particleCount=28;
+  for(let i=0;i<particleCount;i++){
+    const particle=document.createElement("span");
+    particle.className="firework-particle";
+    const angle=i*2*Math.PI/particleCount;
+    const distance=48+Math.random()*76;
+    particle.style.setProperty("--dx",`${Math.cos(angle)*distance}px`);
+    particle.style.setProperty("--dy",`${Math.sin(angle)*distance}px`);
+    particle.style.setProperty("--color",colors[Math.floor(Math.random()*colors.length)]);
+    burst.appendChild(particle);
+  }
+  area.appendChild(burst);
+  setTimeout(()=>burst.remove(),1550);
+}
+
+function startFireworks(){
+  if(fireworksInterval) clearInterval(fireworksInterval);
+  const area=document.getElementById("fireworksArea");
+  area.replaceChildren();
+  launchFirework();
+  fireworkTimeout=setTimeout(launchFirework,220);
+  fireworksInterval=setInterval(launchFirework,760);
+}
+
+function closeWinnerBatch(){
+  document.getElementById("winnerBox").style.display="none";
+  if(fireworksInterval){clearInterval(fireworksInterval);fireworksInterval=null;}
+  if(fireworkTimeout){clearTimeout(fireworkTimeout);fireworkTimeout=null;}
+  document.getElementById("fireworksArea").replaceChildren();
+  const resolve=finishWinnerModal;
+  finishWinnerModal=null;
+  if(resolve) resolve();
+}
+
+document.getElementById("closeWinnerBtn").addEventListener("click",closeWinnerBatch);
+document.getElementById("winnerBox").addEventListener("click",event=>{
+  if(event.target.id==="winnerBox"||event.target.id==="fireworksArea") closeWinnerBatch();
+});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&document.getElementById("winnerBox").style.display==="flex") closeWinnerBatch();
+});
 
 
 function renderTable(){
