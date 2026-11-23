@@ -207,6 +207,7 @@ h1{
   font-size:22px;
   opacity:.9;
 }
+#winnerDepartment{margin-top:8px;font-size:20px;color:#ffe082}
 
 /* ===== SPARKLE ===== */
 .sparkle{
@@ -363,7 +364,7 @@ th,td{padding:14px}
       <button id="pickExcelBtn" type="button" onclick="document.getElementById('excelFile').click()">Chọn file Excel</button>
       <button id="templateBtn" class="template-button" type="button" onclick="downloadExcelTemplate()">⬇ Tải file mẫu</button>
       <div id="participantCount" aria-live="polite"></div>
-      <p id="importStatus" aria-live="polite">Cột cần có: Mã số, Họ tên. Mã có số 0 đầu nên để dạng văn bản.</p>
+      <p id="importStatus" aria-live="polite">Cần có cột Mã số và Họ tên; có thể thêm cột Bộ phận. Mã có số 0 đầu nên để dạng văn bản.</p>
     </div>
   </details>
   <button id="exportBtn" class="export" onclick="exportExcel()">📥 Xuất Excel</button>
@@ -378,6 +379,7 @@ th,td{padding:14px}
     <div class="sparkle" style="bottom:-10px;left:45%;animation-delay:1s">⭐</div>
     <div id="winnerName"></div>
     <div id="winnerCode"></div>
+    <div id="winnerDepartment" style="display:none"></div>
   </div>
 </div>
 
@@ -399,7 +401,7 @@ th,td{padding:14px}
   <h2>🏆 DANH SÁCH TRÚNG THƯỞNG</h2>
   <table>
     <thead>
-      <tr><th>Giải</th><th>Mã số</th><th>Họ tên</th></tr>
+      <tr><th>Giải</th><th>Mã số</th><th>Họ tên</th><th>Bộ phận</th></tr>
     </thead>
     <tbody id="resultTable"></tbody>
   </table>
@@ -496,6 +498,8 @@ async function draw(){
 function showWinner(item){
   winnerName.textContent=item.name;
   winnerCode.textContent="Mã số: "+item.code;
+  winnerDepartment.textContent=item.department?"Bộ phận: "+item.department:"";
+  winnerDepartment.style.display=item.department?"block":"none";
   winnerBox.style.display="flex";
   return new Promise(resolve=>setTimeout(()=>{
     winnerBox.style.display="none";
@@ -519,7 +523,7 @@ function renderTable(){
 
     resultTable.innerHTML+=`
       <tr class="round-header" onclick="toggle('${cls}')">
-        <td colspan="3">▶ ${escapeHtml(key)} (${grouped[key].length} người)</td>
+        <td colspan="4">▶ ${escapeHtml(key)} (${grouped[key].length} người)</td>
       </tr>
     `;
 
@@ -529,6 +533,7 @@ function renderTable(){
           <td>${escapeHtml(r.prize)}</td>
           <td class="code">${escapeHtml(r.code)}</td>
           <td>${escapeHtml(r.name)}</td>
+          <td>${escapeHtml(r.department||"—")}</td>
         </tr>
       `;
     });
@@ -561,7 +566,8 @@ function exportExcel(){
     "Giải": r.prize,
     "Đợt": r.round,
     "Mã số": r.code,
-    "Họ tên": r.name
+    "Họ tên": r.name,
+    "Bộ phận": r.department||""
   }));
 
   let ws = XLSX.utils.json_to_sheet(data);
@@ -590,12 +596,15 @@ async function importExcelList(event){
     const normalizeHeader=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9]/g,"");
     const codeHeaders=new Set(["maso","ma","code","id","manv","idnhanvien","manhanvien","manguoithamgia","employeeid","sbd"]);
     const nameHeaders=new Set(["hoten","hotennhanvien","hovaten","ten","name","fullname","tennhanvien","tennguoithamgia"]);
+    const departmentHeaders=new Set(["bophan","department","dept","phongban","donvi","team","workgroup"]);
     const firstRow=rows[0].map(normalizeHeader);
     const codeColumn=firstRow.findIndex(value=>codeHeaders.has(value));
     const nameColumn=firstRow.findIndex(value=>nameHeaders.has(value));
+    const departmentColumn=firstRow.findIndex(value=>departmentHeaders.has(value));
     const hasHeader=codeColumn>=0&&nameColumn>=0;
     const codeIndex=hasHeader?codeColumn:0;
     const nameIndex=hasHeader?nameColumn:1;
+    const departmentIndex=departmentColumn>=0?departmentColumn:(hasHeader?-1:2);
     const dataRows=hasHeader?rows.slice(1):rows;
     const seen=new Set();
     const imported=[];
@@ -604,12 +613,13 @@ async function importExcelList(event){
     dataRows.forEach(row=>{
       const code=String(row[codeIndex]??"").trim();
       const name=String(row[nameIndex]??"").trim();
-      if(!code&&!name) return;
+      const department=departmentIndex>=0?String(row[departmentIndex]??"").trim():"";
+      if(!code&&!name&&!department) return;
       if(!code||!name){skipped++;return;}
       const key=code.toLocaleLowerCase();
       if(seen.has(key)){skipped++;return;}
       seen.add(key);
-      imported.push({code,name});
+      imported.push({code,name,department});
     });
     if(!imported.length) throw new Error("Không tìm thấy dòng hợp lệ. Cần có mã số và họ tên ở hai cột đầu, hoặc tiêu đề tương ứng.");
 
@@ -646,8 +656,8 @@ function updateParticipantCount(){
 
 function downloadExcelTemplate(){
   if(typeof XLSX==="undefined"){alert("Không tải được thư viện Excel. Hãy kiểm tra kết nối Internet rồi thử lại.");return;}
-  const sheet=XLSX.utils.aoa_to_sheet([["Mã số","Họ tên"]]);
-  sheet["!cols"]=[{wch:16},{wch:36}];
+  const sheet=XLSX.utils.aoa_to_sheet([["Mã số","Họ tên","Bộ phận"]]);
+  sheet["!cols"]=[{wch:16},{wch:36},{wch:24}];
   const workbook=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook,sheet,"Danh sách");
   XLSX.writeFile(workbook,"mau_danh_sach_quay_so.xlsx");
