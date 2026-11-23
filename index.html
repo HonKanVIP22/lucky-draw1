@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Lucky Draw Pro</title>
+
+<style>
+body{
+  background:url("nen.jpg") center/cover no-repeat fixed;
+  font-family:'Segoe UI',Arial;
+  color:#fff;
+  text-align:center;
+  margin:0;
+  min-height:100vh;
+}
+.overlay{
+  background:rgba(0,0,0,0.35);
+  min-height:100vh;
+  padding-top:50px;
+}
+
+/* ===== TITLE ===== */
+h1{
+  font-size:64px;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-bottom:28px;
+  background:linear-gradient(90deg,#fff176,#ffeb3b,#ffc107);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.title-icon{
+  display:inline-block;
+  animation:rotateSlow 8s linear infinite;
+  margin-right:14px;
+}
+
+/* ===== SLOT ===== */
+.slot{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin:30px 0;
+}
+.digit{
+  width:84px;
+  height:118px;
+  background:linear-gradient(180deg,#ffeb3b,#ffc107);
+  color:#5d4037;
+  font-size:66px;
+  font-weight:900;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ===== SPIN BUTTON ===== */
+#spinBtn{
+  width:190px;
+  height:190px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffeb3b,#ffc107);
+  color:#5d4037;
+  font-size:34px;
+  font-weight:900;
+  border:none;
+  cursor:pointer;
+}
+
+/* ===== RIGHT PANEL ===== */
+.right-panel{
+  position:fixed;
+  top:20px;
+  right:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:rgba(0,0,0,.4);
+  padding:12px;
+  border-radius:16px;
+}
+.right-panel select,
+.right-panel input{
+  width:150px;
+  padding:8px;
+  border-radius:12px;
+  background:rgba(0,0,0,.5);
+  color:#fff;
+  border:none;
+  text-align:center;
+}
+.right-panel button{
+  padding:8px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+}
+.export{background:#d50000;color:#fff}
+.reset{background:#0d47a1;color:#fff}
+
+/* ===== WINNER CENTER ===== */
+#winnerBox{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+}
+#winnerContent{
+  background:rgba(0,0,0,.85);
+  padding:40px 60px;
+  border-radius:30px;
+  box-shadow:0 0 50px rgba(255,215,0,.9);
+  position:relative;
+}
+#winnerContent h2{
+  font-size:36px;
+  color:#ffeb3b;
+  margin-bottom:16px;
+}
+#winnerName{
+  font-size:56px;
+  font-weight:900;
+}
+#winnerCode{
+  margin-top:12px;
+  font-size:22px;
+  opacity:.9;
+}
+
+/* ===== SPARKLE ===== */
+.sparkle{
+  position:absolute;
+  font-size:26px;
+  animation:sparkle 1.5s ease-in-out infinite;
+}
+
+/* ===== CONFETTI ===== */
+.confetti{
+  position:absolute;
+  font-size:26px;
+  animation:floatUp 2.8s linear infinite;
+}
+
+/* ===== RESULT ===== */
+.result-box{
+  margin:44px auto;
+  width:88%;
+  max-width:980px;
+  background:rgba(0,0,0,0.5);
+  border-radius:24px;
+  padding:24px;
+}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px}
+.prize{color:#ffd54f;font-weight:800}
+.code{font-family:monospace;font-size:20px}
+
+/* ===== THAN TAI ===== */
+.thantai-box{
+  position:fixed;
+  right:20px;
+  bottom:40px;
+  width:240px;
+  z-index:998;
+  text-align:center;
+  animation:thantaiSwing 3s ease-in-out infinite;
+}
+.thantai-box img{
+  width:100%;
+  filter:drop-shadow(0 10px 25px rgba(0,0,0,.6));
+}
+.thantai-text{
+  background:linear-gradient(90deg,#ffeb3b,#ffc107);
+  color:#5d4037;
+  font-weight:900;
+  padding:8px 14px;
+  border-radius:20px;
+  margin-bottom:6px;
+  display:inline-block;
+  animation:textBounce 1.6s ease-in-out infinite;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+
+  /* ===== HORSE STAND (NGỰA ĐỨNG) ===== */
+.horse-stand{
+  position:fixed;
+  left:20px;
+  bottom:40px;       /* BẰNG bottom của thần tài */
+  width:240px;       /* BẰNG width của thần tài */
+  z-index:998;
+  text-align:center;
+}
+.horse-stand img{
+  width:100%;
+  filter:drop-shadow(0 10px 25px rgba(0,0,0,.6));
+}
+.horse-text{
+  background:linear-gradient(90deg,#ffeb3b,#ffc107);
+  color:#5d4037;
+  font-weight:900;
+  padding:8px 14px;
+  border-radius:20px;
+  margin-bottom:6px;
+  display:inline-block;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+
+/* ===== HORSE RUN ===== */
+.horse-run{
+  position:fixed;
+  top:20px;
+  left:-220px;
+  width:300px;
+  z-index:50;
+  animation:horseRun 12s linear infinite;
+  pointer-events:none;
+}
+.horse-run img{
+  width:75%;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));
+}
+/* ==== GOM KẾT QUẢ THEO ĐỢT ==== */
+.round-header{
+  cursor:pointer;
+  background:rgba(255,215,0,.15);
+  font-weight:900;
+}
+.round-header:hover{
+  background:rgba(255,215,0,.3);
+}
+.round-detail{
+  display:none;
+}
+/* ===== ANIMATIONS ===== */
+@keyframes floatUp{
+  from{transform:translateY(0) rotate(0);opacity:1}
+  to{transform:translateY(-140px) rotate(360deg);opacity:0}
+}
+@keyframes sparkle{
+  0%,100%{opacity:.2;transform:scale(.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
+@keyframes rotateSlow{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+@keyframes thantaiSwing{
+  0%,100%{transform:rotate(-5deg)}
+  50%{transform:rotate(5deg)}
+}
+@keyframes textBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes horseRun{
+  from{left:-220px;}
+  to{left:110%;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="right-panel">
+  <select id="prize">
+    <option>Giải Nhất</option>
+    <option>Giải Nhì</option>
+    <option>Giải Ba</option>
+    <option>Giải Thưởng</option>
+  </select>
+  <input id="drawCount" type="number" value="1" min="1">
+  <button class="export" onclick="exportExcel()">📥 Xuất Excel</button>
+  <button class="reset" onclick="resetAll()">🔄 Reset</button>
+</div>
+
+<div id="winnerBox">
+  <div id="winnerContent">
+    <h2>🎉 CHÚC MỪNG 🎉</h2>
+    <div class="sparkle" style="top:-10px;left:-20px;">✨</div>
+    <div class="sparkle" style="top:-10px;right:-20px;animation-delay:.5s">✨</div>
+    <div class="sparkle" style="bottom:-10px;left:45%;animation-delay:1s">⭐</div>
+    <div id="winnerName"></div>
+    <div id="winnerCode"></div>
+  </div>
+</div>
+
+<div id="confettiArea"></div>
+
+<div class="overlay">
+
+<h1><span class="title-icon">🎯</span>QUAY SỐ MAY MẮN</h1>
+
+<div class="slot">
+  <div class="digit">0</div><div class="digit">0</div>
+  <div class="digit">0</div><div class="digit">0</div>
+  <div class="digit">0</div>
+</div>
+
+<button id="spinBtn" onclick="draw()">QUAY</button>
+
+<div class="result-box">
+  <h2>🏆 DANH SÁCH TRÚNG THƯỞNG</h2>
+  <table>
+    <thead>
+      <tr><th>Giải</th><th>Mã số</th><th>Họ tên</th></tr>
+    </thead>
+    <tbody id="resultTable"></tbody>
+  </table>
+</div>
+
+</div>
+
+<!-- HORSE -->
+<div class="horse-run">
+  <img src="ngua.png" alt="Ngựa chạy">
+</div>
+<!-- HORSE STAND -->
+<div class="horse-stand">
+  <div class="horse-text"> MÃ ĐÁO THÀNH CÔNG </div>
+  <img src="ngua2.png" alt="Ngựa đứng">
+</div>
+<!-- THAN TAI -->
+<div class="thantai-box">
+  <div class="thantai-text">✨ Người Ấy Là Ai?? ✨</div>
+  <img src="thantai.png" alt="Thần Tài">
+</div>
+
+<script>
+const defaultItems=[
+{code:"00073",name:"Hoàng Thị Trung Thu - P.KHXNK"},
+{code:"00012",name:"Đỗ Anh Thư - P.TCHC"},
+{code:"00095",name:"Nguyễn Huỳnh Thanh Phú - Kho 45"},
+{code:"00041",name:"Cao Thị Kim Nhật Luyến - P.KTCN"},
+{code:"00004",name:"Thái Kim Oanh - Ban TGĐ"},
+{code:"00088",name:"Bạch Thị Khin Khon - Kho 1236"},
+{code:"00029",name:"Đặng Thị Dạ Thảo - P.TCHC"},
+{code:"00067",name:"Trần Ngọc Thảo Vy - P.KHXNK"},
+{code:"00052",name:"Trần Ngọc An - P.KTCN"},
+{code:"00019",name:"Võ Thị Nguyệt - P.TCHC"},
+{code:"00084",name:"Lê Tấn Hậu - Kho 1236"},
+{code:"00033",name:"Nghê Kim Thế Thuận - P.KTCN"},
+{code:"00002",name:"Trần Thị Thanh Trà - Ban TGĐ"},
+{code:"00097",name:"Đậu Thụy Quỳnh Anh - Kho 45"},
+{code:"00061",name:"Nguyễn Huy Cường - P.KHXNK"},
+{code:"00045",name:"Lê Thị Bích Trâm - P.KTCN"},
+{code:"00010",name:"Phùng Thị Xuân Hương - P.TCHC"},
+{code:"00078",name:"Đinh Ngọc Huy - Kho TP"},
+{code:"00023",name:"Phạm Thị Lan - P.TCHC"},
+{code:"00056",name:"Võ Ngọc Đức Toàn - P.KTCN"},
+{code:"00091",name:"Lê Vương Quốc Ái - Kho 45"},
+{code:"00037",name:"Phạm Thị Như Tuyền - P.KTCN"},
+{code:"00005",name:"Huỳnh Trần Anh Khoa - Ban TGĐ"},
+{code:"00082",name:"Nguyễn Xuân Sương - Kho 1236"},
+{code:"00016",name:"Nguyễn Hoàng Khang - P.TCHC"},
+{code:"00070",name:"Hồ Kiến Thức - P.KHXNK"},
+{code:"00048",name:"Lê Nữ Hoàng Thi - P.KTCN"},
+{code:"00099",name:"Lê Thị Kiều Oanh - P.QTCL"},
+{code:"00031",name:"Nguyễn Thị Thúy Vy - P.KTCN"},
+{code:"00008",name:"Nguyễn Hoàng Loan Anh - P.Kế toán"},
+{code:"00074",name:"Phan Thị Ngọc Hiếu - P.KHXNK"},
+{code:"00054",name:"Võ Thị Hồng Hằng - P.KTCN"},
+{code:"00021",name:"Nguyễn Ngọc Diễm Nhi - P.TCHC"},
+{code:"00093",name:"Phan Hoàng Lâm Trung - Kho 45"},
+{code:"00039",name:"Dương Thị Hải Phương - P.KTCN"},
+{code:"00014",name:"Đặng Thị Thu Thủy - P.TCHC"},
+{code:"00063",name:"Trần Quốc Trường - P.KHXNK"},
+{code:"00086",name:"Võ Thế Pháp - Kho 1236"},
+{code:"00027",name:"Nguyễn Thanh Mùi - P.TCHC"},
+{code:"00058",name:"Phan Thị Xuân Nhi - P.KTCN"},
+{code:"00001",name:"Lê Thanh Hoàng - Ban TGĐ"},
+{code:"00076",name:"Lê Đăng Trần Vy Đan - P.KHXNK"},
+{code:"00044",name:"Phạm Thị Ngọc Hương - P.KTCN"},
+{code:"00018",name:"Nguyễn Thị Thảo - P.TCHC"},
+{code:"00083",name:"Nguyễn Đức Triều - Kho 1236"},
+{code:"00035",name:"Nguyễn P. Thảo Nguyên - P.KTCN"},
+{code:"00007",name:"Lê Nguyễn Bảo Ngọc - P.Kế toán"},
+{code:"00092",name:"Đặng Trí Anh - Kho 45"},
+{code:"00060",name:"Trương Đình Phúc - P.KTCN"},
+{code:"00025",name:"Trần Ngọc Quỳnh - P.TCHC"},
+{code:"00049",name:"Lê Thị Bích Quyên - P.KTCN"},
+{code:"00011",name:"Trần Thị Ngân - P.TCHC"},
+{code:"00069",name:"Nguyễn Thị Thu Anh - P.KHXNK"},
+{code:"00096",name:"Lâm Hữu Hân - Kho 45"},
+{code:"00032",name:"Đỗ Thị Thu Thảo - P.KTCN"},
+{code:"00055",name:"Phan Trung Kiên - P.KTCN"},
+{code:"00020",name:"Lê Thị Thuận - P.TCHC"},
+{code:"00075",name:"Hồ Thị Thúy Hằng - P.KHXNK"},
+{code:"00042",name:"Dương Thị Yến - P.KTCN"},
+{code:"00015",name:"Phạm Thụy Hoàng Oanh - P.TCHC"},
+{code:"00090",name:"Dương Thị Vân - Kho 45"},
+{code:"00026",name:"Nguyễn Quốc Bảo - P.TCHC"},
+{code:"00051",name:"Trần Thị Châu Hà - P.KTCN"},
+{code:"00006",name:"Giang Thị Thu Thảo - P.Kế toán"},
+{code:"00087",name:"Nguyễn Thị Thanh Huệ - Kho 1236"},
+{code:"00030",name:"Nguyễn Nguyên Thùy - P.KTCN"},
+{code:"00064",name:"Võ Công Tới - P.KHXNK"},
+{code:"00098",name:"Đinh Thị Bích Thuận - Kho 45"},
+{code:"00034",name:"Lê Thị Hồng Thảo - P.KTCN"},
+{code:"00059",name:"Nguyễn Thị Bích Lệ - P.KTCN"},
+{code:"00013",name:"Đặng Công Hòa - P.TCHC"},
+{code:"00079",name:"Lâm Minh Tuyến - Kho 1236"},
+{code:"00047",name:"Nguyễn Thị Mỹ Yến - P.KTCN"},
+{code:"00022",name:"Nguyễn Văn Nhật - P.TCHC"},
+{code:"00072",name:"Huỳnh Minh Tuấn - P.KHXNK"},
+{code:"00038",name:"Nguyễn Lâm Tường Vi - P.KTCN"},
+{code:"00003",name:"Trần Thị Kim Dung - Ban TGĐ"},
+{code:"00085",name:"Võ Tư Duy - Kho 1236"},
+{code:"00028",name:"Phan Thị Ngọc Lành - P.TCHC"},
+{code:"00053",name:"Cao Thị Bích Phương - P.KTCN"},
+{code:"00009",name:"Giang Kiều Hạnh - P.Kế toán"},
+{code:"00081",name:"Phạm Văn Tâm - Kho 1236"},
+{code:"00046",name:"Nguyễn Thị Trâm - P.KTCN"},
+{code:"00017",name:"Nguyễn Trọng Võ - P.TCHC"},
+{code:"00068",name:"Nguyễn Thị Minh Khuê - P.KHXNK"},
+{code:"00040",name:"Trần Yến Linh - P.KTCN"},
+{code:"00100",name:"Nguyễn Thị Thuý Nga - P.QTCL"},
+{code:"00024",name:"Cao Thị Xuân Loan - P.TCHC"},
+{code:"00065",name:"Vũ Trần Minh Kha - P.KHXNK"},
+{code:"00036",name:"Đỗ Thị Diễm Lộc - P.KTCN"},
+{code:"00094",name:"Nguyễn Văn Dũng - Kho 45"},
+{code:"00050",name:"Nguyễn Bá Băng Ngân - P.KTCN"},
+{code:"00071",name:"Phạm Thị Khánh Ly - P.KHXNK"},
+{code:"00043",name:"Trần Vũ Anh Linh - P.KTCN"},
+{code:"00080",name:"Võ Văn Sang - Kho 1236"},
+{code:"00062",name:"Dương Huệ - P.KHXNK"},
+{code:"00089",name:"Trần P. Vũ Kiều Ngân - Kho 1236"},
+{code:"00057",name:"Nguyễn Thị Thanh Táo - P.KTCN"},
+{code:"00077",name:"Ngô Thị Minh Phương - P.KHXNK"},
+{code:"00066",name:"Nguyễn Thị Bích Trâm - P.KHXNK"},
+{code:"00173",name:"Nguyễn Huy Hoàng - ĐM - X1"},
+{code:"00124",name:"Nguyễn Sơn Tùng - P.CĐ"},
+{code:"00190",name:"Hồ Thị Kim Thoa - C5 - X1"},
+{code:"00141",name:"Phan Thị Nhi - Cấp dưỡng"},
+{code:"00112",name:"Nguyễn Tiến Thành - P.CTSX"},
+{code:"00167",name:"Nguyễn Minh Huy - CCT - X1"},
+{code:"00155",name:"Huỳnh Hữu Thành - Bảo vệ"},
+{code:"00183",name:"Nguyễn Thị Phương - C3 - X1"},
+{code:"00105",name:"Đỗ Thị Mỹ Vân - P.QTCL"},
+{code:"00131",name:"Đậu Khắc Diễn - P.CĐ"},
+{code:"00198",name:"Nguyễn Duy Nhật - TP - X1"},
+{code:"00146",name:"Nguyễn Thị Mỹ Loan - Cấp dưỡng"},
+{code:"00118",name:"Đoàn Hồng Thảo - P.CTSX"},
+{code:"00176",name:"Trần Thị Bích Chung - C1 - X1"},
+{code:"00162",name:"Nguyễn Thị Ánh Dương - KT - X1"},
+{code:"00139",name:"Nguyễn Thị Ngọc Trâm - Cấp dưỡng"},
+{code:"00188",name:"Nguyễn Thị Bích Liên - C5 - X1"},
+{code:"00129",name:"Nguyễn Thành Đủ - P.CĐ"},
+{code:"00171",name:"Trần Ghim Vỹ - ĐM - X1"},
+{code:"00102",name:"Trần Thị Thanh Phương - P.QTCL"},
+{code:"00194",name:"Phan Văn Quốc - TK - Cắt X1"},
+{code:"00137",name:"Nguyễn Thị Lài B - Cấp dưỡng"},
+{code:"00159",name:"Nguyễn Nữ Diệu Ngân - Ban QĐX1"},
+{code:"00181",name:"Võ Thị Kim Chi - C2 - X1"},
+{code:"00114",name:"Lê Hoàng Long - P.CTSX"},
+{code:"00152",name:"Nguyễn Thị Lệ - Cấp dưỡng"},
+{code:"00123",name:"Nguyễn Bắc Sơn - P.CĐ"},
+{code:"00196",name:"Văn Thị Bích Tuyền - KCS - X1"},
+{code:"00134",name:"Trần Thị Thúy Phượng - Cấp dưỡng"},
+{code:"00174",name:"Lê Hưng Phát - ĐM - X1"},
+{code:"00108",name:"Nguyễn Thị Tâm - P.QTCL"},
+{code:"00147",name:"Nguyễn Thị Hoa - Cấp dưỡng"},
+{code:"00199",name:"Thái Tăng Trung - Ban QĐX2"},
+{code:"00127",name:"Đặng Công Hậu - P.CĐ"},
+{code:"00165",name:"Trần Thị Mỹ Ly - KT - X1"},
+{code:"00110",name:"Trương Khánh Vi - P.QTCL"},
+{code:"00184",name:"Nguyễn Thị Ngọc Ánh - C3 - X1"},
+{code:"00156",name:"Trần Thanh Hùng - Bảo vệ"},
+{code:"00119",name:"Trần Thị Thu Trang - P.CTSX"},
+{code:"00168",name:"Nguyễn Trần Kim Quyên - TK - X1"},
+{code:"00144",name:"Nguyễn Thị Lài - Cấp dưỡng"},
+{code:"00193",name:"Nguyễn Thanh Tú - Cắt - X1"},
+{code:"00132",name:"Lê Văn Thọ - P.CĐ"},
+{code:"00103",name:"Phạm Thị Ngọc Ly - P.QTCL"},
+{code:"00180",name:"Nguyễn Vũ Cẩm Ly - C2 - X1"},
+{code:"00150",name:"Hoàng Thị Hồng - Cấp dưỡng"},
+{code:"00121",name:"Nguyễn Thị Bích Tuyền - P.CTSX"},
+{code:"00187",name:"Võ Thị Hồng Phấn - C4 - X1"},
+{code:"00116",name:"Nguyễn Lê Bảo Linh - P.CTSX"},
+{code:"00170",name:"Trịnh Như Khoa - ĐM - X1"},
+{code:"00143",name:"Lương Thị Thu Hà - Cấp dưỡng"},
+{code:"00158",name:"Nguyễn Minh Dương - GĐSX"},
+{code:"00175",name:"Nguyễn Thị Sơn - MM - X1"},
+{code:"00101",name:"Trần Thị Thanh Ngọc - P.QTCL"},
+{code:"00135",name:"Trần Thị Duy Hằng - Cấp dưỡng"},
+{code:"00182",name:"Trần Thị Trang - C3 - X1"},
+{code:"00160",name:"Trần Thị Xanh - Ban QĐX1"},
+{code:"00128",name:"Đoàn Duy Khánh - P.CĐ"},
+{code:"00195",name:"Võ Thị Minh Thoa - KCS - X1"},
+{code:"00107",name:"Nguyễn Thị Hòa - P.QTCL"},
+{code:"00145",name:"Phạm Thị Bích Hằng - Cấp dưỡng"},
+{code:"00172",name:"Trần Nguyễn Nhật Trường - ĐM - X1"},
+{code:"00109",name:"Võ Thị Bích Hằng - P.QTCL"},
+{code:"00185",name:"Võ Thị Thanh Hiền - C4 - X1"},
+{code:"00163",name:"Hồ Thị Bích Ngọc - KT - X1"},
+{code:"00191",name:"Lê Văn Hùng - Cắt - X1"},
+{code:"00130",name:"Nguyễn Văn Đan - P.CĐ"},
+{code:"00138",name:"Nguyễn Thị Xuân Thắm - Cấp dưỡng"},
+{code:"00115",name:"Trần Thị Loan - P.CTSX"},
+{code:"00153",name:"Trương Thị Hòa - Cấp dưỡng"},
+{code:"00120",name:"Trần Đăng Khoa - P.CTSX"},
+{code:"00178",name:"Lê Thị Thanh Thúy - C1 - X1"},
+{code:"00164",name:"Phạm Thị Loan - KT - X1"},
+{code:"00148",name:"Nguyễn Thị Kim Hoa - Cấp dưỡng"},
+{code:"00104",name:"Nguyễn Hồ Anh Kiệt - P.QTCL"},
+{code:"00189",name:"Trần Thảo Nguyên - C5 - X1"},
+{code:"00154",name:"Lê Thị Út - Cấp dưỡng"},
+{code:"00122",name:"Dương Quang Hiếu - P.CĐ"},
+{code:"00136",name:"Trương Thị Ngọc Gấm - Cấp dưỡng"},
+{code:"00192",name:"Hồ Thị Mỹ Hạnh - Cắt - X1"},
+{code:"00106",name:"Châu Thị Thanh Nga - P.QTCL"},
+{code:"00197",name:"Nguyễn Tuấn Vinh - TP - X1"},
+{code:"00166",name:"Nguyễn Thị Như Thái - KT - X1"},
+{code:"00117",name:"Phan Văn Thịnh - P.CTSX"},
+{code:"00186",name:"Nguyễn Thị Xuân - C4 - X1"},
+{code:"00133",name:"Bùi Thị Thủy - Cấp dưỡng"},
+{code:"00169",name:"Trần Tiến Dũng - ĐM - X1"},
+{code:"00125",name:"Bùi Xuân Hoàng - P.CĐ"},
+{code:"00142",name:"Phạm Thị Mai - Cấp dưỡng"},
+{code:"00177",name:"Hoàng Linh Phụng - C1 - X1"},
+{code:"00200",name:"Lê Thành Vinh - Ban QĐX2"},
+{code:"00151",name:"Phạm Thị Tuyết - Cấp dưỡng"},
+{code:"00126",name:"Trần Quang Hưng - P.CĐ"},
+{code:"00179",name:"Lê Thị Thanh Hân - C2 - X1"},
+{code:"00140",name:"Nguyễn Thị Ái Hồng - Cấp dưỡng"},
+{code:"00157",name:"Lê Văn Phú - Bảo vệ"},
+{code:"00111",name:"Trương Văn Quang - P.CTSX"},
+{code:"00113",name:"Phạm Ngọc Hoa Mai - P.CTSX"},
+{code:"00161",name:"Tô Thị Phương Thủy - Ban QĐX1"},
+{code:"00149",name:"Dư Thị Hương - Cấp dưỡng"},
+{code:"00273", name:"Nguyễn Đức Thuận - ĐM X4"},
+{code:"00218", name:"Lưu Thảo Nguyên - C9 X2"},
+{code:"00294", name:"Phan Thị Tiểu Lệ - C11 X4"},
+{code:"00241", name:"Nguyễn Sỹ Vũ Linh - ĐM X3"},
+{code:"00207", name:"Nguyễn Văn Duy - CCT X2"},
+{code:"00266", name:"Trần Đắc Khoa - TK X4"},
+{code:"00229", name:"Nguyễn Thị Bình - KT X3"},
+{code:"00285", name:"Nguyễn Thái Châu Thi - C3 X4"},
+{code:"00252", name:"Vũ Thị Ái Phương - C10 X3"},
+{code:"00211", name:"Nguyễn Hữu Dừa - ĐM X2"},
+{code:"00296", name:"Lư Thị Thúy Phượng - C11 X4"},
+{code:"00234", name:"Lê Chí Nhật - CCT X3"},
+{code:"00258", name:"Lê Thúy Vân - C13 X3"},
+{code:"00202", name:"Nguyễn Thị Mỹ Thi - KT X2"},
+{code:"00279", name:"Trần Thị Miền Chung - C1 X4"},
+{code:"00248", name:"Hoàng Thị Bích Phương - KCS X3"},
+{code:"00221", name:"Lê Huỳnh Đức - Cắt X26"},
+{code:"00290", name:"Phạm Tường Vi - C4 X4"},
+{code:"00263", name:"Nguyễn Thị Mỹ Trinh - Ban QĐX4"},
+{code:"00214", name:"Trần Thị Tuyết Hương - C6 X2"},
+{code:"00239", name:"Dương Ngọc Tùng Lâm - ĐM X3"},
+{code:"00275", name:"Nguyễn Duy Pháp - CCT X4"},
+{code:"00226", name:"Dương Ngoãn - Ban QĐX3"},
+{code:"00283", name:"Nguyễn Thị Thùy Dung - C3, C4 X4"},
+{code:"00255", name:"Nguyễn Thị Thu - C11 X3"},
+{code:"00204", name:"Trương Thị Kiều Ly - KT X2"},
+{code:"00270", name:"Nguyễn Duy Pháp - ĐM X4"},
+{code:"00244", name:"Võ Công Nghiệm - Cắt X3"},
+{code:"00299", name:"Cao Thị Mão - Ban QĐX5"},
+{code:"00232", name:"Lê Thị Ly - KT X3"},
+{code:"00287", name:"Đỗ Tích Phương - C3 X4"},
+{code:"00250", name:"Nguyễn Đức Thao - TP X3"},
+{code:"00212", name:"Nguyễn Ngọc Thông - ĐM X2"},
+{code:"00295", name:"Trần Thị Hạnh - C11 X4"},
+{code:"00268", name:"Nguyễn Việt Tấn - ĐM X4"},
+{code:"00223", name:"Trần Thị Mỹ Linh - TK Cắt X26"},
+{code:"00260", name:"Nguyễn Thị Phấn - C14 X3"},
+{code:"00237", name:"Trần Thị P. Thủy Trâm - P.Down X3"},
+{code:"00280", name:"Nguyễn Thị Thanh Điệp - C2 X4"},
+{code:"00203", name:"Nguyễn Phi Yến Minh - KT X2"},
+{code:"00276", name:"Nguyễn Thị Hồng Gấm - KCS X4"},
+{code:"00217", name:"Phạm Thị Thu - C8 X2"},
+{code:"00289", name:"Nguyễn Thị Tố Nhi - C4 X4"},
+{code:"00246", name:"Phan Thị Tiểu My - Cắt X3"},
+{code:"00231", name:"Ngô Thị Năng - KT X3"},
+{code:"00298", name:"Nguyễn Ngọc Châu - Ban QĐX5"},
+{code:"00253", name:"Huỳnh Thị Kim Liên - C11 X3"},
+{code:"00208", name:"Nguyễn Ng. Yến Phương - TK X2"},
+{code:"00271", name:"Lê Minh Trí - ĐM X4"},
+{code:"00240", name:"Phan Minh Nhật - ĐM X3"},
+{code:"00219", name:"Hồ Thuý Nga - C9 X2"},
+{code:"00264", name:"Phạm Thị Lệ Quyên - Ban QĐX4"},
+{code:"00286", name:"Phạm Thị Thùy Trang - C3 X4"},
+{code:"00210", name:"Diệp Trần Anh Khoa - ĐM X2"},
+{code:"00293", name:"Trần Thị Hồng Nhi - C5 X4"},
+{code:"00224", name:"Võ Thị Thanh Thảo - KCS X2"},
+{code:"00261", name:"Trần Thị Minh Hương - C14 X3"},
+{code:"00230", name:"Ngô Thị Tuyết - KT X3"},
+{code:"00277", name:"Đoàn Thị Bích Ngọc - C1 X4"},
+{code:"00254", name:"Nguyễn Thị Thuy Thơ - C11 X3"},
+{code:"00205", name:"Đinh Thị Trang - KT X2"},
+{code:"00272", name:"Võ Quốc Tú - ĐM X4"},
+{code:"00243", name:"Nguyễn Trần Thanh Thảo - Cắt X3"},
+{code:"00300", name:"Trần Văn Định - Cải thiện CL"},
+{code:"00235", name:"Phan Thị Hương Tiền - TK X3"},
+{code:"00267", name:"Trịnh Thạch Sơn - ĐM X4"},
+{code:"00216", name:"Danh Ngọc Hải - C7 X2"},
+{code:"00288", name:"Nguyễn Thị Ngọc Trâm - C4 X4"},
+{code:"00249", name:"Đào Thị Khánh Vi - KCS X3"},
+{code:"00201", name:"Trần Thị Vân - KT X2"},
+{code:"00282", name:"Huỳnh Thị Hồng Thủy - C2 X4"},
+{code:"00245", name:"Đỗ Việt Nghĩa - Cắt X3"},
+{code:"00213", name:"Dương Hồng Phấn - C6 X2"},
+{code:"00291", name:"Trần Ngọc Anh - C5 X4"},
+{code:"00222", name:"Trần Thị Bích Liên - TK Cắt 26"},
+{code:"00259", name:"Vũ Thị Dung - C13 X3"},
+{code:"00228", name:"Tô Thị Thu Hiền - Ban QĐX3"},
+{code:"00274", name:"Nguyễn Huy Chương - ĐM X4"},
+{code:"00238", name:"Phạm Hữu Tài - ĐM X3"},
+{code:"00215", name:"Nguyễn Thị Mỹ - C7 X2"},
+{code:"00297", name:"Lê Thị Thúy An - C11 X4"},
+{code:"00233", name:"Trần Thị Thùy Chi - KT X3"},
+{code:"00284", name:"Nguyễn Đình Ngọc - C3 X4"},
+{code:"00257", name:"Võ Thị Thanh Thúy - C12 X3"},
+{code:"00209", name:"Huỳnh Văn Tôn - ĐM X2"},
+{code:"00269", name:"Dương Đức Quang - ĐM X4"},
+{code:"00242", name:"Nguyễn Hữu Lành - ĐM X3"},
+{code:"00225", name:"Nguyễn Ngọc Bảo Anh - KCS X2"},
+{code:"00262", name:"Huỳnh Thanh Hải - C14 X3"},
+{code:"00236", name:"Trần Nguyên Vũ - ĐM X3"},
+{code:"00281", name:"Hồ Trần Thân Hậu - C2 X4"},
+{code:"00292", name:"Trần Huyền Trang - C5 X4"},
+{code:"00227", name:"Đỗ Thị Kiều Nga - Ban QĐX3"},
+{code:"00256", name:"Dương Thị Thu - C12 X3"},
+{code:"00220", name:"Huỳnh Tấn Thiết Hổ - Cắt X26"},
+{code:"00247", name:"Trần Thị Bích Trân - TK Cắt X3"},
+{code:"00278", name:"Trần Thị Tú Quyên - C1 X4"},
+{code:"00251", name:"Ngô Thanh Liêm - TP X3"},
+{code:"00265", name:"Trần Thanh Lam - Ban QĐX4"},
+{code:"00206", name:"Phan Thị Mỹ Nhụy - KT X2"},
+{code:"00347", name:"Nguyễn Thị Thanh Thúy - KT X45"},
+{code:"00312", name:"Dương Minh Ngọc - C6 X5"},
+{code:"00381", name:"Võ Thị Hiền - C15 X6"},
+{code:"00329", name:"Huỳnh Tấn Hào - KT Mẫu X45"},
+{code:"00364", name:"Mai Thị Liễu - Ban QĐX6"},
+{code:"00305", name:"Phan Trường Lâm - ĐM X5"},
+{code:"00373", name:"Nguyễn Thị Xuân Thủy - TK X6"},
+{code:"00333", name:"Nguyễn Thị Nguyệt - KT Mẫu X45"},
+{code:"00388", name:"Trương Nữ Huyền Trang - KCS X6"},
+{code:"00318", name:"Nguyễn Thị Liên - C7 X5"},
+{code:"00352", name:"Nguyễn Thị Bích Diễm - KT X45"},
+{code:"00301", name:"Nguyễn Thị Hoa - P.Down 45"},
+{code:"00375", name:"Trần Quốc Đạt - ĐM X6"},
+{code:"00322", name:"Võ Văn Đại - C8 X5"},
+{code:"00340", name:"Thái Thị Minh Diệu - KT X45"},
+{code:"00309", name:"Nguyễn Văn Phương - ĐM X5"},
+{code:"00360", name:"Nguyễn Tấn Khương - TP X45"},
+{code:"00327", name:"Lê Thị Hiền - C12 X5"},
+{code:"00369", name:"Trần Anh Giang - KT X6"},
+{code:"00344", name:"Trương Thị Mai - KT X45"},
+{code:"00314", name:"Hồ Thị Mỹ Duyên - C6 X5"},
+{code:"00383", name:"Nguyễn Thị Yến Vân - C16 X6"},
+{code:"00336", name:"Phan Quế Phương - KT X45"},
+{code:"00355", name:"Nguyễn Hùng Tuấn - Cắt X45"},
+{code:"00307", name:"Nguyễn Minh Hùng - ĐM X5"},
+{code:"00368", name:"Phan Thị Quỳnh Nhân - KT X6"},
+{code:"00321", name:"Lữ Thị Hồng Phượng - C8 X5"},
+{code:"00350", name:"Nguyễn Thị Thu Thảo - KT X45"},
+{code:"00303", name:"Nguyễn Lê Minh Hiếu - TK X5"},
+{code:"00374", name:"Trần Hoàng Sâm - ĐM X6"},
+{code:"00342", name:"Trần Thanh Bạch Yến - KT X45"},
+{code:"00332", name:"Đoàn Xuân Trâm - KT Mẫu X45"},
+{code:"00386", name:"Huỳnh Thị Hồng - C18 X6"},
+{code:"00325", name:"Nguyễn Thị Ngọc Uyên - C10 X5"},
+{code:"00358", name:"Nguyễn Thị Ngọc Ánh - Cắt X45"},
+{code:"00316", name:"Võ Thị Diễm Kiều - C7 X5"},
+{code:"00363", name:"Trần Thị Bích Huệ - KCSTP X45"},
+{code:"00337", name:"La Thị Thủy - KT X45"},
+{code:"00380", name:"Nguyễn Thị Phượng - C15 X6"},
+{code:"00304", name:"Trần Đoàn Nghị Lực - ĐM X5"},
+{code:"00371", name:"Lê Thị Ánh Nguyệt - KT X6"},
+{code:"00328", name:"Trần Thanh Thảo - C12 X5"},
+{code:"00362", name:"Đặng Quốc Cường - TP X45"},
+{code:"00319", name:"Trương Thị Tuyết Nhung - C8 X5"},
+{code:"00345", name:"Nguyễn Minh Nhật - KT X45"},
+{code:"00310", name:"Trần Thị Lệ Thảo - KCS X5"},
+{code:"00378", name:"Phan Vũ Kim Khánh - TP X26"},
+{code:"00334", name:"Nguyễn Thị Hương Giang - KT Mẫu X45"},
+{code:"00356", name:"Thông Văn Đông - Cắt X45"},
+{code:"00317", name:"Lương Thị Thái - C7 X5"},
+{code:"00384", name:"Nguyễn Chí Hòa - C17 X6"},
+{code:"00338", name:"Đỗ Hoàng Trúc - KT X45"},
+{code:"00323", name:"Nguyễn Thị Kim Vy - C9 X5"},
+{code:"00365", name:"Lương Thị Hiền - Ban QĐX6"},
+{code:"00306", name:"Nguyễn Quốc Vinh - ĐM X5"},
+{code:"00349", name:"Võ Thị Kim Ngọc - KT X45"},
+{code:"00330", name:"Trần Thị Ánh Xuân - KT Mẫu X45"},
+{code:"00372", name:"Lê Thị Mỹ Dung - KT X6"},
+{code:"00326", name:"Nguyễn Thị Bích Nhật - C10 X5"},
+{code:"00382", name:"Trương Vĩnh Thái - C16 X6"},
+{code:"00331", name:"Nguyễn Thị Ánh - KT Mẫu X45"},
+{code:"00353", name:"Trần Hồng Ngân - KT X45"},
+{code:"00308", name:"Đinh Thiên Huy - ĐM X5"},
+{code:"00361", name:"Nguyễn Thuận Phú - TP X45"},
+{code:"00320", name:"Lê Thị Mỹ Tín - C8 X5"},
+{code:"00348", name:"Trần Thảo Tiên - KT X45"},
+{code:"00315", name:"Nguyễn Thị Bích Trầm - C6 X5"},
+{code:"00377", name:"Vũ Quang Huy - TP X26"},
+{code:"00346", name:"Nguyễn Thị Hòa - KT X45"},
+{code:"00311", name:"Phan Thị Vui - KCS X5"},
+{code:"00367", name:"Nguyễn Thị Phương Oanh - KT X6"},
+{code:"00335", name:"Nguyễn Thị Trà Mỹ - KT X45"},
+{code:"00324", name:"Võ Thị Thanh Hằng - C9 X5"},
+{code:"00354", name:"Trương Thị Hằng - KT X45"},
+{code:"00302", name:"Nguyễn Văn Mai - CCT X5"},
+{code:"00385", name:"Nguyễn Thị Kim Chi - C17 X6"},
+{code:"00359", name:"Võ Thị Hồng Châu - TK Cắt X45"},
+{code:"00339", name:"Nguyễn Thị Ngọc Hiếu - KT X45"},
+{code:"00366", name:"Hồ Văn Pháp - Ban QĐX6"},
+{code:"00376", name:"Phan Thanh Phúc - ĐM X6"},
+{code:"00341", name:"Trần Cẩm Tiên - KT X45"},
+{code:"00379", name:"Phạm Thanh Phú - TP X26"},
+{code:"00343", name:"Nguyễn Thị Thanh Nga - KT X45"},
+{code:"00357", name:"Huỳnh Đông Giang - Cắt X45"},
+{code:"00370", name:"Hồ Thị Nhi - KT X6"},
+{code:"00351", name:"Đinh Thị Kim Yến - KT X45"},
+{code:"00313", name:"Ngô Thị Vân - C6 X5"},
+{code:"00389", name:"Inoue Yoshikazu - Toray"},
+{code:"00390", name:"Naito Kohta - Toray"},
+{code:"00391", name:"Nguyễn Văn Thông - Toray"},
+{code:"00392", name:"Đặng Bá Liên Châu - Toray"},
+{code:"00393", name:"Lê Thiên Nhi - Toray"},
+{code:"00394", name:"Nguyễn Thảo Vân - Toray"},
+{code:"00395", name:"Hồ Minh Tuấn - Toray"},
+{code:"00396", name:"Nguyễn Hữu Hòa - Toray"},
+{code:"00397", name:"Phạm Thị Hồng Trinh - Toray"},
+{code:"00398", name:"Đỗ Trí Dũng - Toray"},
+{code:"00399", name:"Trần Thị Nhàn - Toray"},
+];
+
+let items=JSON.parse(localStorage.getItem("ITEMS"))||[...defaultItems];
+let results=JSON.parse(localStorage.getItem("RESULTS"))||[];
+let round=parseInt(localStorage.getItem("ROUND"))||1;
+window.onload=renderTable;
+
+function spinDigits(target){
+  let d=document.querySelectorAll(".digit");
+  let i=0;
+  let it=setInterval(()=>{
+    d.forEach(x=>x.innerText=Math.floor(Math.random()*10));
+    if(++i>40){
+      clearInterval(it);
+      target.code.split("").forEach((n,j)=>d[j].innerText=n);
+    }
+  },120);
+}
+
+function draw(){
+  let count=parseInt(drawCount.value)||1;
+  if(count>items.length){alert("Không đủ người");return;}
+  let prizeValue=prize.value;
+  let delay=0;
+  let currentRound=round;
+
+  for(let k=0;k<count;k++){
+    setTimeout(()=>{
+      let i=Math.floor(Math.random()*items.length);
+      let item=items.splice(i,1)[0];
+      spinDigits(item);
+      setTimeout(()=>showWinner(item,prizeValue,currentRound),8500);
+    },delay);
+    delay+=4500;
+  }
+
+  round++;
+  localStorage.setItem("ROUND",round);
+}
+
+function showWinner(item,prizeValue,roundNo){
+  winnerName.innerText=item.name;
+  winnerCode.innerText="Mã số: "+item.code;
+  winnerBox.style.display="flex";
+
+  setTimeout(()=>{
+    winnerBox.style.display="none";
+    results.push({
+      prize: prizeValue,
+      round: roundNo,   // 👈 thêm round
+      ...item
+    });
+    localStorage.setItem("ITEMS",JSON.stringify(items));
+    localStorage.setItem("RESULTS",JSON.stringify(results));
+    renderTable();
+  },4000);
+}
+
+
+function renderTable(){
+  resultTable.innerHTML="";
+  let grouped={};
+
+  results.forEach(r=>{
+    let key=`${r.prize} - Đợt ${r.round}`;
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push(r);
+  });
+
+  Object.keys(grouped).forEach(key=>{
+    let cls="r"+Math.random().toString(36).substr(2,6);
+
+    resultTable.innerHTML+=`
+      <tr class="round-header" onclick="toggle('${cls}')">
+        <td colspan="3">▶ ${key} (${grouped[key].length} người)</td>
+      </tr>
+    `;
+
+    grouped[key].forEach(r=>{
+      resultTable.innerHTML+=`
+        <tr class="round-detail ${cls}">
+          <td>${r.prize}</td>
+          <td class="code">${r.code}</td>
+          <td>${r.name}</td>
+        </tr>
+      `;
+    });
+  });
+}
+function toggle(cls){
+  document.querySelectorAll("."+cls).forEach(r=>{
+    r.style.display = r.style.display==="table-row" ? "none":"table-row";
+  });
+}
+function exportCSV(){
+  let csv="Prize,Code,Name\n";
+  results.forEach(r=>csv+=`${r.prize},${r.code},${r.name}\n`);
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv]));
+  a.download="ketqua_quayso.csv";
+  a.click();
+}
+function exportExcel(){
+  if(results.length===0){
+    alert("Chưa có dữ liệu để xuất");
+    return;
+  }
+
+  let data = results.map(r => ({
+    "Giải": r.prize,
+    "Đợt": r.round,
+    "Mã số": r.code,
+    "Họ tên": r.name
+  }));
+
+  let ws = XLSX.utils.json_to_sheet(data);
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Kết quả");
+
+  XLSX.writeFile(wb, "ketqua_quayso.xlsx");
+}
+
+function resetAll(){
+  if(!confirm("RESET toàn bộ dữ liệu?")) return;
+
+  localStorage.clear();
+
+  items = [...defaultItems];
+  results = [];
+  round = 1; // ⭐ RESET SỐ ĐỢT
+
+  localStorage.setItem("ROUND", round);
+
+  renderTable();
+  document.querySelectorAll(".digit").forEach(d=>d.innerText="0");
+}
+
+
+/* THAN TAI + NGỰA CHẠY NHANH KHI QUAY */
+const spinBtnEl=document.getElementById("spinBtn");
+const thanTai=document.querySelector(".thantai-box");
+const horse=document.querySelector(".horse-run");
+
+spinBtnEl.addEventListener("click",()=>{
+  thanTai.style.animation="thantaiSwing .6s ease-in-out infinite";
+  horse.style.animation="horseRun 6s linear infinite";
+  setTimeout(()=>{
+    thanTai.style.animation="thantaiSwing 3s ease-in-out infinite";
+    horse.style.animation="horseRun 12s linear infinite";
+  },3000);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</body>
+</html>
