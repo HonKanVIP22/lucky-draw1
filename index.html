@@ -68,36 +68,113 @@ h1{
   cursor:pointer;
 }
 
-/* ===== RIGHT PANEL ===== */
+/* ===== COMPACT CONTROL BAR ===== */
 .right-panel{
   position:fixed;
-  top:20px;
-  right:20px;
+  z-index:1000;
+  top:16px;
+  right:16px;
   display:flex;
-  flex-direction:column;
-  gap:10px;
-  background:rgba(0,0,0,.4);
-  padding:12px;
-  border-radius:16px;
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  max-width:calc(100vw - 32px);
+  box-sizing:border-box;
+  padding:8px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:18px;
+  background:rgba(28,31,37,.68);
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  backdrop-filter:blur(12px);
 }
 .right-panel select,
-.right-panel input{
-  width:150px;
-  padding:8px;
+.right-panel input[type=number]{
+  height:40px;
+  box-sizing:border-box;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.12);
   border-radius:12px;
-  background:rgba(0,0,0,.5);
+  background:#4b4b4b;
   color:#fff;
-  border:none;
   text-align:center;
+  font:700 14px 'Segoe UI',Arial,sans-serif;
 }
-.right-panel button{
-  padding:8px;
+#prize{width:108px}
+#drawCount{width:48px}
+.right-panel button,
+.import-menu>summary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:40px;
+  box-sizing:border-box;
+  padding:0 11px;
+  border:0;
   border-radius:20px;
-  border:none;
   cursor:pointer;
+  white-space:nowrap;
+  font:700 14px 'Segoe UI',Arial,sans-serif;
+  transition:transform .15s ease,filter .15s ease;
 }
+.right-panel button:hover,
+.import-menu>summary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.right-panel button:disabled,
+#spinBtn:disabled,
+.import-menu.locked>summary{opacity:.55;cursor:not-allowed;pointer-events:none}
 .export{background:#d50000;color:#fff}
 .reset{background:#0d47a1;color:#fff}
+.import-menu{position:relative}
+.import-menu>summary{
+  list-style:none;
+  background:linear-gradient(135deg,#ffe66d,#ffbd26);
+  color:#4b3510;
+}
+.import-menu>summary::-webkit-details-marker{display:none}
+.import-menu>summary::after{content:"⌄";margin-left:5px;font-size:16px;line-height:1}
+.import-menu[open]>summary{box-shadow:0 0 0 2px rgba(255,224,102,.25)}
+.import-popover{
+  position:absolute;
+  top:calc(100% + 9px);
+  right:0;
+  z-index:1001;
+  display:grid;
+  gap:10px;
+  width:232px;
+  padding:14px;
+  box-sizing:border-box;
+  border:1px solid rgba(255,224,102,.3);
+  border-radius:16px;
+  background:rgba(29,31,36,.96);
+  box-shadow:0 14px 36px rgba(0,0,0,.35);
+  text-align:left;
+  backdrop-filter:blur(14px);
+}
+.import-popover label{display:grid;gap:6px;font-size:12px;color:#ddd}
+.import-popover select{
+  width:100%;
+  height:38px;
+  box-sizing:border-box;
+  padding:0 10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  background:#41434a;
+  color:#fff;
+  font:600 13px 'Segoe UI',Arial,sans-serif;
+}
+.import-popover button{width:100%;height:38px;border-radius:10px;background:#ffca28;color:#46330d}
+.import-popover .template-button{height:32px;background:transparent;color:#ffe082;border:1px solid rgba(255,224,102,.25)}
+#excelFile{display:none}
+#participantCount{font-size:12px;font-weight:700;color:#ffeb3b}
+#importStatus{min-height:1.3em;margin:0;font-size:12px;line-height:1.4;color:#ddd}
+@media(max-width:700px){
+  .overlay{padding-top:28px}
+  h1{font-size:clamp(34px,9vw,54px);letter-spacing:1px}
+  .right-panel{position:static;margin:12px auto;width:max-content;max-width:calc(100vw - 24px);justify-content:center}
+  #spinBtn{width:150px;height:150px;font-size:28px}
+  .digit{width:52px;height:78px;font-size:42px}
+}
 
 /* ===== WINNER CENTER ===== */
 #winnerBox{
@@ -272,9 +349,25 @@ th,td{padding:14px}
     <option>Giải Ba</option>
     <option>Giải Thưởng</option>
   </select>
-  <input id="drawCount" type="number" value="1" min="1">
-  <button class="export" onclick="exportExcel()">📥 Xuất Excel</button>
-  <button class="reset" onclick="resetAll()">🔄 Reset</button>
+  <input id="drawCount" type="number" value="1" min="1" aria-label="Số người quay">
+  <details id="importMenu" class="import-menu">
+    <summary title="Nhập danh sách Excel hoặc CSV">📥 Nhập Excel</summary>
+    <div class="import-popover">
+      <label for="importMode">Cách nhập danh sách
+        <select id="importMode">
+          <option value="replace">Thay danh sách còn lại</option>
+          <option value="append">Nối vào danh sách còn lại</option>
+        </select>
+      </label>
+      <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" onchange="importExcelList(event)">
+      <button id="pickExcelBtn" type="button" onclick="document.getElementById('excelFile').click()">Chọn file Excel</button>
+      <button id="templateBtn" class="template-button" type="button" onclick="downloadExcelTemplate()">⬇ Tải file mẫu</button>
+      <div id="participantCount" aria-live="polite"></div>
+      <p id="importStatus" aria-live="polite">Cột cần có: Mã số, Họ tên. Mã có số 0 đầu nên để dạng văn bản.</p>
+    </div>
+  </details>
+  <button id="exportBtn" class="export" onclick="exportExcel()">📥 Xuất Excel</button>
+  <button id="resetBtn" class="reset" onclick="resetAll()">🔄 Reset</button>
 </div>
 
 <div id="winnerBox">
@@ -314,6 +407,7 @@ th,td{padding:14px}
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 const defaultItems=[
 {code:"00399", name:"Trần Thị Nhàn - Toray"},
@@ -322,57 +416,91 @@ const defaultItems=[
 let items=JSON.parse(localStorage.getItem("ITEMS"))||[...defaultItems];
 let results=JSON.parse(localStorage.getItem("RESULTS"))||[];
 let round=parseInt(localStorage.getItem("ROUND"))||1;
-window.onload=renderTable;
+let isDrawing=false;
+let isImporting=false;
+window.onload=()=>{renderTable();updateParticipantCount();};
+
+function prepareDigits(count){
+  const slot=document.querySelector(".slot");
+  const total=Math.max(5,count);
+  if(slot.children.length!==total){
+    slot.innerHTML=Array.from({length:total},()=>'<div class="digit">0</div>').join("");
+  }
+}
 
 function spinDigits(target){
-  let d=document.querySelectorAll(".digit");
-  let i=0;
-  let it=setInterval(()=>{
-    d.forEach(x=>x.innerText=Math.floor(Math.random()*10));
-    if(++i>40){
-      clearInterval(it);
-      target.code.split("").forEach((n,j)=>d[j].innerText=n);
+  const code=String(target.code);
+  prepareDigits(code.length);
+  const digits=document.querySelectorAll(".digit");
+  let tick=0;
+  return new Promise(resolve=>{
+    const timer=setInterval(()=>{
+      digits.forEach(digit=>digit.textContent=Math.floor(Math.random()*10));
+      if(++tick>=40){
+        clearInterval(timer);
+        [...code.padStart(digits.length,"0")].forEach((n,index)=>digits[index].textContent=n);
+        resolve();
+      }
+    },100);
+  });
+}
+
+function setDrawControlsLocked(locked){
+  ["spinBtn","prize","drawCount","excelFile","importMode","pickExcelBtn","exportBtn","resetBtn","templateBtn"].forEach(id=>{
+    const control=document.getElementById(id);
+    if(control) control.disabled=locked;
+  });
+  const menu=document.getElementById("importMenu");
+  if(menu) menu.classList.toggle("locked",locked);
+}
+
+function saveState(){
+  localStorage.setItem("ITEMS",JSON.stringify(items));
+  localStorage.setItem("RESULTS",JSON.stringify(results));
+  localStorage.setItem("ROUND",String(round));
+}
+
+async function draw(){
+  if(isDrawing||isImporting) return;
+  const count=Number(drawCount.value);
+  if(!Number.isInteger(count)||count<1){alert("Vui lòng nhập số người quay hợp lệ.");return;}
+  if(count>items.length){alert("Số người còn lại không đủ để quay.");return;}
+
+  isDrawing=true;
+  setDrawControlsLocked(true);
+  spinBtn.textContent="ĐANG QUAY...";
+  const prizeValue=prize.value;
+  const currentRound=round;
+
+  try{
+    round=currentRound+1;
+    localStorage.setItem("ROUND",String(round));
+    for(let k=0;k<count;k++){
+      const index=Math.floor(Math.random()*items.length);
+      const item=items.splice(index,1)[0];
+      results.push({prize:prizeValue,round:currentRound,...item});
+      saveState();
+      await spinDigits(item);
+      await showWinner(item);
+      renderTable();
+      updateParticipantCount();
     }
-  },120);
-}
-
-function draw(){
-  let count=parseInt(drawCount.value)||1;
-  if(count>items.length){alert("Không đủ người");return;}
-  let prizeValue=prize.value;
-  let delay=0;
-  let currentRound=round;
-
-  for(let k=0;k<count;k++){
-    setTimeout(()=>{
-      let i=Math.floor(Math.random()*items.length);
-      let item=items.splice(i,1)[0];
-      spinDigits(item);
-      setTimeout(()=>showWinner(item,prizeValue,currentRound),8500);
-    },delay);
-    delay+=4500;
+  }finally{
+    isDrawing=false;
+    setDrawControlsLocked(false);
+    spinBtn.textContent="QUAY";
+    updateParticipantCount();
   }
-
-  round++;
-  localStorage.setItem("ROUND",round);
 }
 
-function showWinner(item,prizeValue,roundNo){
-  winnerName.innerText=item.name;
-  winnerCode.innerText="Mã số: "+item.code;
+function showWinner(item){
+  winnerName.textContent=item.name;
+  winnerCode.textContent="Mã số: "+item.code;
   winnerBox.style.display="flex";
-
-  setTimeout(()=>{
+  return new Promise(resolve=>setTimeout(()=>{
     winnerBox.style.display="none";
-    results.push({
-      prize: prizeValue,
-      round: roundNo,   // 👈 thêm round
-      ...item
-    });
-    localStorage.setItem("ITEMS",JSON.stringify(items));
-    localStorage.setItem("RESULTS",JSON.stringify(results));
-    renderTable();
-  },4000);
+    resolve();
+  },4000));
 }
 
 
@@ -391,21 +519,25 @@ function renderTable(){
 
     resultTable.innerHTML+=`
       <tr class="round-header" onclick="toggle('${cls}')">
-        <td colspan="3">▶ ${key} (${grouped[key].length} người)</td>
+        <td colspan="3">▶ ${escapeHtml(key)} (${grouped[key].length} người)</td>
       </tr>
     `;
 
     grouped[key].forEach(r=>{
       resultTable.innerHTML+=`
         <tr class="round-detail ${cls}">
-          <td>${r.prize}</td>
-          <td class="code">${r.code}</td>
-          <td>${r.name}</td>
+          <td>${escapeHtml(r.prize)}</td>
+          <td class="code">${escapeHtml(r.code)}</td>
+          <td>${escapeHtml(r.name)}</td>
         </tr>
       `;
     });
   });
 }
+function escapeHtml(value){
+  return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
+}
+
 function toggle(cls){
   document.querySelectorAll("."+cls).forEach(r=>{
     r.style.display = r.style.display==="table-row" ? "none":"table-row";
@@ -439,36 +571,121 @@ function exportExcel(){
   XLSX.writeFile(wb, "ketqua_quayso.xlsx");
 }
 
-function resetAll(){
-  if(!confirm("RESET toàn bộ dữ liệu?")) return;
+async function importExcelList(event){
+  const file=event.target.files?.[0];
+  if(!file) return;
+  if(isDrawing||isImporting){alert("Vui lòng đợi thao tác hiện tại kết thúc rồi nhập danh sách.");event.target.value="";return;}
+  if(typeof XLSX==="undefined"){alert("Không tải được thư viện đọc Excel. Hãy kiểm tra kết nối Internet rồi tải lại trang.");event.target.value="";return;}
+  const mode=document.getElementById("importMode").value;
+  isImporting=true;
+  setDrawControlsLocked(true);
+  document.getElementById("importStatus").textContent="Đang đọc file...";
 
-  localStorage.clear();
+  try{
+    const workbook=XLSX.read(await file.arrayBuffer(),{type:"array"});
+    const firstSheet=workbook.Sheets[workbook.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(firstSheet,{header:1,defval:"",raw:false});
+    if(!rows.length) throw new Error("File không có dữ liệu.");
 
-  items = [...defaultItems];
-  results = [];
-  round = 1; // ⭐ RESET SỐ ĐỢT
+    const normalizeHeader=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9]/g,"");
+    const codeHeaders=new Set(["maso","ma","code","id","manv","idnhanvien","manhanvien","manguoithamgia","employeeid","sbd"]);
+    const nameHeaders=new Set(["hoten","hotennhanvien","hovaten","ten","name","fullname","tennhanvien","tennguoithamgia"]);
+    const firstRow=rows[0].map(normalizeHeader);
+    const codeColumn=firstRow.findIndex(value=>codeHeaders.has(value));
+    const nameColumn=firstRow.findIndex(value=>nameHeaders.has(value));
+    const hasHeader=codeColumn>=0&&nameColumn>=0;
+    const codeIndex=hasHeader?codeColumn:0;
+    const nameIndex=hasHeader?nameColumn:1;
+    const dataRows=hasHeader?rows.slice(1):rows;
+    const seen=new Set();
+    const imported=[];
+    let skipped=0;
 
-  localStorage.setItem("ROUND", round);
+    dataRows.forEach(row=>{
+      const code=String(row[codeIndex]??"").trim();
+      const name=String(row[nameIndex]??"").trim();
+      if(!code&&!name) return;
+      if(!code||!name){skipped++;return;}
+      const key=code.toLocaleLowerCase();
+      if(seen.has(key)){skipped++;return;}
+      seen.add(key);
+      imported.push({code,name});
+    });
+    if(!imported.length) throw new Error("Không tìm thấy dòng hợp lệ. Cần có mã số và họ tên ở hai cột đầu, hoặc tiêu đề tương ứng.");
 
-  renderTable();
-  document.querySelectorAll(".digit").forEach(d=>d.innerText="0");
+    if(mode==="replace"&&!confirm(`Thay danh sách còn lại bằng ${imported.length} người từ file này?`)){event.target.value="";return;}
+    if(mode==="replace") items=[];
+    const existing=new Set(results.map(item=>String(item.code).trim().toLocaleLowerCase()));
+    items.forEach(item=>existing.add(String(item.code).trim().toLocaleLowerCase()));
+    let added=0;
+    imported.forEach(item=>{
+      const key=item.code.toLocaleLowerCase();
+      if(existing.has(key)){skipped++;return;}
+      existing.add(key);items.push(item);added++;
+    });
+    localStorage.setItem("ITEMS",JSON.stringify(items));
+    updateParticipantCount();
+    const extra=skipped?` Bỏ qua ${skipped} dòng trống, thiếu dữ liệu hoặc trùng mã.`:"";
+    document.getElementById("importStatus").textContent=`Đã nhập ${added} người. Còn ${items.length} người trong danh sách.${extra}`;
+    document.getElementById("importStatus").style.color="#c8e6c9";
+  }catch(error){
+    document.getElementById("importStatus").textContent=error.message||"Không đọc được file Excel.";
+    document.getElementById("importStatus").style.color="#ffcdd2";
+  }finally{
+    event.target.value="";
+    isImporting=false;
+    setDrawControlsLocked(false);
+    document.getElementById("importMenu").open=false;
+  }
 }
 
+function updateParticipantCount(){
+  const count=document.getElementById("participantCount");
+  if(count) count.textContent=`Danh sách còn ${items.length} người chưa trúng thưởng.`;
+}
 
-/* THAN TAI + NGỰA CHẠY NHANH KHI QUAY */
+function downloadExcelTemplate(){
+  if(typeof XLSX==="undefined"){alert("Không tải được thư viện Excel. Hãy kiểm tra kết nối Internet rồi thử lại.");return;}
+  const sheet=XLSX.utils.aoa_to_sheet([["Mã số","Họ tên"]]);
+  sheet["!cols"]=[{wch:16},{wch:36}];
+  const workbook=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook,sheet,"Danh sách");
+  XLSX.writeFile(workbook,"mau_danh_sach_quay_so.xlsx");
+}
+
+function resetAll(){
+  if(isDrawing||isImporting) return;
+  if(!confirm("RESET toàn bộ kết quả và khôi phục danh sách mặc định?")) return;
+  localStorage.removeItem("ITEMS");
+  localStorage.removeItem("RESULTS");
+  localStorage.removeItem("ROUND");
+  items=[...defaultItems];
+  results=[];
+  round=1;
+  renderTable();
+  updateParticipantCount();
+  prepareDigits(5);
+  document.querySelectorAll(".digit").forEach(d=>d.textContent="0");
+  document.getElementById("importStatus").textContent="";
+}
+
+/* Các hình trang trí được bật khi quay nếu trang có khai báo chúng. */
 const spinBtnEl=document.getElementById("spinBtn");
 const thanTai=document.querySelector(".thantai-box");
 const horse=document.querySelector(".horse-run");
-
 spinBtnEl.addEventListener("click",()=>{
-  thanTai.style.animation="thantaiSwing .6s ease-in-out infinite";
-  horse.style.animation="horseRun 6s linear infinite";
+  if(thanTai) thanTai.style.animation="thantaiSwing .6s ease-in-out infinite";
+  if(horse) horse.style.animation="horseRun 6s linear infinite";
   setTimeout(()=>{
-    thanTai.style.animation="thantaiSwing 3s ease-in-out infinite";
-    horse.style.animation="horseRun 12s linear infinite";
+    if(thanTai) thanTai.style.animation="thantaiSwing 3s ease-in-out infinite";
+    if(horse) horse.style.animation="horseRun 12s linear infinite";
   },3000);
 });
+
+document.addEventListener("click",event=>{
+  const menu=document.getElementById("importMenu");
+  if(menu&&!menu.contains(event.target)) menu.open=false;
+});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
